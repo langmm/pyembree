@@ -1,0 +1,51 @@
+[build-system]
+requires = [
+  "setuptools >= 61.0",
+  "setuptools_scm",
+  "cython",
+  "numpy",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyembree"
+version = '0.1.7'
+dynamic = [
+  # "version",
+  "readme",
+]
+dependencies = [
+  "numpy",
+]
+license-files = ["LICENSE"]
+keywords = [
+  "pyembree"
+]
+
+[project.urls]
+Homepage = "https://github.com/scopatz/pyembree"
+Documentation = "https://github.com/scopatz/pyembree"
+Repository = "https://github.com/scopatz/pyembree"
+Issues = "https://github.com/scopatz/pyembree/issues"
+Changelog = "https://github.com/scopatz/pyembree/blob/main/CHANGELOG.rst"
+
+[tool.setuptools]
+packages = ["pyembree"]
+include-package-data = true
+package-data = {pyembree = ['*.pxd']}
+
+# [tool.setuptools.ext-modules]
+
+# ext-modules = [
+#   {
+#     name = "example", sources = ["example.pyx"], language = 'c++',
+#     include_path = 
+#   }
+# ]
+
+# [tool.setuptools_scm]
+# version_file = "pyembree/_version.py"
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.rst"]}
+

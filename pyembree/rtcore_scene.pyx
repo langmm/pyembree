@@ -1,3 +1,4 @@
+# distutils: language=c++
 cimport cython
 cimport numpy as np
 import numpy as np
@@ -12,7 +13,7 @@ from .callback_handler cimport \
 
 log = logging.getLogger('pyembree')
 
-cdef void error_printer(const rtc.RTCError code, const char *_str):
+cdef void error_printer(void* userPtr, const rtc.RTCError code, const char *_str) noexcept:
     """
     error_printer function depends on embree version
     Embree 2.14.1
@@ -31,8 +32,9 @@ cdef class EmbreeScene:
             # We store the embree device inside EmbreeScene to avoid premature deletion
             self.device = rtc.EmbreeDevice()
             device = self.device
-        rtc.rtcDeviceSetErrorFunction(device.device, error_printer)
-        self.scene_i = rtcDeviceNewScene(device.device, RTC_SCENE_STATIC, RTC_INTERSECT1)
+        rtc.rtcSetDeviceErrorFunction(device.device, error_printer, NULL)
+        self.scene_i = rtcNewScene(device.device)
+        # , RTC_SCENE_STATIC, RTC_INTERSECT1)
         self.is_committed = 0
 
     def run(self, np.ndarray[np.float32_t, ndim=2] vec_origins,
@@ -41,7 +43,7 @@ cdef class EmbreeScene:
                   RayCollisionCallback callback_handler=None):
 
         if self.is_committed == 0:
-            rtcCommit(self.scene_i)
+            rtcCommitScene(self.scene_i)
             self.is_committed = 1
 
         if callback_handler is None:
@@ -82,7 +84,7 @@ cdef class EmbreeScene:
         else:
             intersect_ids = np.empty(nv, dtype="int32")
 
-        cdef rtcr.RTCRay ray
+        cdef rtcr.RTCRayHit rayhit
         cdef int do_continue
         vd_i = 0
         vd_step = 1
@@ -90,39 +92,44 @@ cdef class EmbreeScene:
         if vec_directions.shape[0] == 1: vd_step = 0
 
         for i in range(nv):
-            for j in range(3):
-                ray.org[j] = vec_origins[i, j]
-                ray.dir[j] = vec_directions[vd_i, j]
-            ray.tnear = 0.0
-            ray.tfar = tfars[i]
-            ray.geomID = rtcg.RTC_INVALID_GEOMETRY_ID
-            ray.primID = rtcg.RTC_INVALID_GEOMETRY_ID
-            ray.instID = rtcg.RTC_INVALID_GEOMETRY_ID
-            ray.mask = -1
-            ray.time = 0
+            rayhit.ray.org_x = vec_origins[i, 0]
+            rayhit.ray.org_y = vec_origins[i, 1]
+            rayhit.ray.org_z = vec_origins[i, 2]
+            rayhit.ray.dir_x = vec_directions[vd_i, 0]
+            rayhit.ray.dir_y = vec_directions[vd_i, 1]
+            rayhit.ray.dir_z = vec_directions[vd_i, 2]
+            rayhit.ray.tnear = 0.0
+            rayhit.ray.tfar = tfars[i]
+            rayhit.ray.id = rtcg.RTC_INVALID_GEOMETRY_ID
+            rayhit.hit.geomID = rtcg.RTC_INVALID_GEOMETRY_ID
+            rayhit.hit.primID = rtcg.RTC_INVALID_GEOMETRY_ID
+            rayhit.hit.instID[0] = rtcg.RTC_INVALID_GEOMETRY_ID
+            rayhit.ray.mask = -1
+            rayhit.ray.time = 0
             vd_i += vd_step
 
             if query_type == intersect or query_type == distance:
                 do_continue = CALLBACK_CONTINUE
                 while do_continue == CALLBACK_CONTINUE:
-                    rtcIntersect(self.scene_i, ray)
-                    do_continue = callback_handler.callback(ray)
+                    rtcIntersect1(self.scene_i, &rayhit, NULL)
+                    do_continue = callback_handler.callback(rayhit)
                 if not output:
                     if query_type == intersect:
-                        intersect_ids[i] = ray.primID
+                        intersect_ids[i] = rayhit.hit.primID
                     else:
-                        tfars[i] = ray.tfar
+                        tfars[i] = rayhit.ray.tfar
                 else:
-                    primID[i] = ray.primID
-                    geomID[i] = ray.geomID
-                    u[i] = ray.u
-                    v[i] = ray.v
-                    tfars[i] = ray.tfar
-                    for j in range(3):
-                        Ng[i, j] = ray.Ng[j]
+                    primID[i] = rayhit.hit.primID
+                    geomID[i] = rayhit.hit.geomID
+                    u[i] = rayhit.hit.u
+                    v[i] = rayhit.hit.v
+                    tfars[i] = rayhit.ray.tfar
+                    Ng[i, 0] = rayhit.hit.Ng_x
+                    Ng[i, 1] = rayhit.hit.Ng_y
+                    Ng[i, 2] = rayhit.hit.Ng_z
             else:
-                rtcOccluded(self.scene_i, ray)
-                intersect_ids[i] = ray.geomID
+                rtcOccluded1(self.scene_i, &rayhit.ray, NULL)
+                intersect_ids[i] = rayhit.hit.geomID
 
         if output:
             return {'u':u, 'v':v, 'Ng': Ng, 'tfar': tfars, 'primID': primID, 'geomID': geomID}
@@ -133,4 +140,4 @@ cdef class EmbreeScene:
                 return intersect_ids
 
     def __dealloc__(self):
-        rtcDeleteScene(self.scene_i)
+        rtcReleaseScene(self.scene_i)

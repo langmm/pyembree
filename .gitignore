@@ -1,3 +1,4 @@
+_version.py
 build/
 __pycache__/
 pyembree/*.c

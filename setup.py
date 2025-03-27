@@ -7,17 +7,15 @@ from Cython.Build import cythonize
 
 include_path = [np.get_include()]
 
-ext_modules = cythonize('pyembree/*.pyx', language='c++',
-                        include_path=include_path)
+ext_modules = cythonize(
+    'pyembree/*.pyx',
+    include_path=include_path,
+    compiler_directives={'language_level': 2},
+)
 for ext in ext_modules:
     ext.include_dirs = include_path
-    ext.libraries = ["embree"]
+    ext.libraries = ["embree4"]
 
 setup(
-    name="pyembree",
-    version='0.1.6',
     ext_modules=ext_modules,
-    zip_safe=False,
-    packages=find_packages(),
-    package_data = {'pyembree': ['*.pxd']}
 )

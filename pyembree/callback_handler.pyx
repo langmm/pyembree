@@ -1,5 +1,6 @@
-from rtcore_ray cimport RTCRay
+# distutils: language=c++
+from rtcore_ray cimport RTCRayHit
 
 cdef class RayCollisionCallback:
-    cdef int callback(self, RTCRay &ray):
+    cdef int callback(self, RTCRayHit &ray):
         return CALLBACK_TERMINATE
