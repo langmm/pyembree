@@ -51,7 +51,7 @@ cdef class EmbreeScene:
 
         cdef int nv = vec_origins.shape[0]
         cdef int vo_i, vd_i, vd_step
-        cdef np.ndarray[np.int32_t, ndim=1] intersect_ids
+        cdef np.ndarray[np.int64_t, ndim=1] intersect_ids
         cdef np.ndarray[np.float32_t, ndim=1] tfars
         cdef rayQueryType query_type
 
@@ -79,10 +79,10 @@ cdef class EmbreeScene:
             u = np.empty(nv, dtype="float32")
             v = np.empty(nv, dtype="float32")
             Ng = np.empty((nv, 3), dtype="float32")
-            primID = np.empty(nv, dtype="int32")
-            geomID = np.empty(nv, dtype="int32")
+            primID = np.empty(nv, dtype="int64")
+            geomID = np.empty(nv, dtype="int64")
         else:
-            intersect_ids = np.empty(nv, dtype="int32")
+            intersect_ids = np.empty(nv, dtype="int64")
 
         cdef rtcr.RTCRayHit rayhit
         cdef int do_continue
