@@ -27,7 +27,7 @@ with open(version_file, mode="r") as fd:
 
 include = [
     np.get_include(),
-    os.path.join(dependencies_dir, "include", "embree2"),
+    os.path.join(dependencies_dir, "include", "embree4"),
 ]
 library = [
     os.path.join(dependencies_dir, "lib"),
@@ -52,7 +52,7 @@ def build(setup_kwargs: Dict[str, Any]) -> None:
         ext.library_dirs = library
         if os.name == "nt":
             ext.libraries = [
-                "embree",
+                "embree4",
                 "tbb",
                 "tbbmalloc",
             ]
@@ -64,7 +64,7 @@ def build(setup_kwargs: Dict[str, Any]) -> None:
             # See also `ci/embree_linux.bash`
             #
             ext.libraries = [
-                "embree",
+                "embree4",
                 # "tbb",  # Uncomment to build against tbb
                 # "tbbmalloc"  # Uncomment to build against tbb
             ]

@@ -1,10 +1,27 @@
-[tool.poetry]
+[build-system]
+requires = [
+  "setuptools >= 61.0",
+  "setuptools_scm",
+  "cython",
+  "numpy",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "pyembree"
-version = "0.2.11"
-description = "Python wrapper for Intel Embree 2.17.7"
+description = "Python wrapper for Intel Embree"
 authors = [
-    "Anthony Scopatz <scopatz@gmail.com>",
-    "Adam Hendry <adam.grant.hendry@gmail.com>"
+    { name="Anthony Scopatz", email="scopatz@gmail.com" },
+    { name="Adam Hendry", email="adam.grant.hendry@gmail.com" },
+    { name="Meagan Lang", email="langmm.astro@gmail.com" },
+]
+maintainers = [
+    { name="Adam Hendry", email="adam.grant.hendry@gmail.com" },
+    { name="Meagan Lang", email="langmm.astro@gmail.com" },
+]
+dynamic = [
+  "version",
+  "readme",
 ]
 classifiers = [
     "License :: OSI Approved :: BSD License",
@@ -12,40 +29,47 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows :: Windows 10",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8"
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
-readme = "README.rst"
-repository = "https://github.com/adam-grant-hendry/pyembree"
-include = [
-    { path = "build.py" }
+dependencies = [
+  "numpy",
+]
+requires-python = ">=3.10"
+license-files = ["LICENSE"]
+keywords = [
+  "pyembree"
 ]
 
-[tool.poetry.dependencies]
-python = "3.8"
-numpy = "^1.22.2"
-Cython = "^0.29.28"
-setuptools = "^60.9.3"
-wheel = "^0.37.1"
-trimesh = "^3.10.7"
-Rtree = "^1.0.0"
+[project.urls]
+Homepage = "https://github.com/scopatz/pyembree"
+Documentation = "https://github.com/scopatz/pyembree"
+Repository = "https://github.com/adam-grant-hendry/pyembree"
+Issues = "https://github.com/scopatz/pyembree/issues"
+Changelog = "https://github.com/scopatz/pyembree/blob/main/CHANGELOG.rst"
 
-[tool.poetry.dev-dependencies]
-pylint = "^2.12.2"
-pytest = "^7.0.1"
-coverage = "^6.3.2"
-ipython = "^8.1.1"
-isort = "^5.10.1"
-black = "^22.3.0"
-
-[tool.poetry.build]
-generate-setup-file = false
-script = "build.py"
-
-[build-system]
-requires = [
-    "Cython",
-    "numpy",
-    "setuptools>=45",
-    "wheel"
+[project.optional-dependencies]
+dev = [
+  # 'pyline>=2.12.2',
+  'pytest>=7.0.1',
+  'coverage>=6.3.2',
+  'ipython>=8.1.1',
+  'isort>=5.10.1',
+  'black>=22.3.0',
 ]
-build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["pyembree"]
+include-package-data = true
+package-data = {pyembree = ['*.pxd']}
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.rst"]}
+
+[tool.setuptools_scm]
+version_file = "pyembree/_version.py"
+scm.git.describe_command = "git describe --tags --abbrev=0"
+

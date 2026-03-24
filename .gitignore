@@ -24,3 +24,6 @@ rever/
 
 # Embree folder
 pyembree/embree/
+
+# Generated during build by setuptools_scm
+_version.py
