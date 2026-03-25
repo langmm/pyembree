@@ -9,6 +9,8 @@ import numbers
 cimport pyembree.rtcore as rtc
 cimport pyembree.rtcore_ray as rtcr
 cimport pyembree.rtcore_geometry as rtcg
+from pyembree.callback_handler cimport \
+    RayCollisionCallback, RayCollisionNull, CALLBACK_TERMINATE, CALLBACK_CONTINUE
 
 
 log = logging.getLogger('pyembree')
@@ -39,11 +41,15 @@ cdef class EmbreeScene:
 
     def run(self, np.ndarray[np.float32_t, ndim=2] vec_origins,
                   np.ndarray[np.float32_t, ndim=2] vec_directions,
-                  dists=None,query='INTERSECT',output=None):
+                  dists=None,query='INTERSECT',output=None,
+                  RayCollisionCallback callback_handler=None):
 
         if self.is_committed == 0:
             rtcCommitScene(self.scene_i)
             self.is_committed = 1
+
+        if callback_handler is None:
+            callback_handler = RayCollisionNull()
 
         cdef int nv = vec_origins.shape[0]
         cdef int vo_i, vd_i, vd_step
@@ -105,7 +111,10 @@ cdef class EmbreeScene:
             vd_i += vd_step
 
             if query_type == intersect or query_type == distance:
-                rtcIntersect1(self.scene_i, &rayhit, NULL)
+                do_continue = CALLBACK_CONTINUE
+                while do_continue == CALLBACK_CONTINUE:
+                    rtcIntersect1(self.scene_i, &rayhit, NULL)
+                    do_continue = callback_handler.callback(rayhit)
                 if not output:
                     if query_type == intersect:
                         if rayhit.hit.primID == rtcg.RTC_INVALID_GEOMETRY_ID:
